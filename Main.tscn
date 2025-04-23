@@ -1,29 +1,43 @@
-[gd_scene load_steps=6 format=3 uid="uid://bq1sudbvnfsss"]
+[gd_scene load_steps=7 format=3 uid="uid://bq1sudbvnfsss"]
 
 [ext_resource type="Script" uid="uid://cqqk21ugou4rp" path="res://main.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://3rw2ywvrh6jw" path="res://assets/character.glb" id="2_r0du0"]
-[ext_resource type="Texture2D" uid="uid://blpsksmifdmbk" path="res://assets/button.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://bo0hl3s3r6euw" path="res://assets/background.png" id="6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_001"]
+albedo_color = Color(0.5, 0.7, 0.3, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_001"]
-size = Vector2(10, 10)
+material = SubResource("StandardMaterial3D_001")
+size = Vector2(20, 20)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_b1b2c"]
-size = Vector3(10, 0.5, 10)
+size = Vector3(20, 0.5, 20)
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1")
 
+[node name="Background" type="Sprite2D" parent="."]
+z_index = -10
+position = Vector2(640, 360)
+texture = ExtResource("6")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 5, 5)
+light_color = Color(0.9, 0.8, 1, 1)
 
 [node name="PlayerMesh" type="Node3D" parent="."]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 1, 0)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 2, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="PlayerMesh"]
+autoplay = "Idle"
 
 [node name="character" parent="PlayerMesh" instance=ExtResource("2_r0du0")]
 
 [node name="MainCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 2, 5)
+transform = Transform3D(1, 0, 0, 0, 0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 4, 6)
 current = true
+far = 100.0
 
 [node name="Ground" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_001")
@@ -46,8 +60,8 @@ offset_left = 900.0
 offset_top = 50.0
 offset_right = 1200.0
 offset_bottom = 200.0
+theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
 text = "Inventaire"
-icon = ExtResource("4")
 
 [node name="ExploreButton" type="Button" parent="UI"]
 layout_mode = 0
@@ -55,8 +69,8 @@ offset_left = 900.0
 offset_top = 250.0
 offset_right = 1200.0
 offset_bottom = 400.0
+theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
 text = "Explorer"
-icon = ExtResource("4")
 
 [node name="ArenaButton" type="Button" parent="UI"]
 layout_mode = 0
@@ -64,5 +78,5 @@ offset_left = 900.0
 offset_top = 450.0
 offset_right = 1200.0
 offset_bottom = 600.0
+theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
 text = "Arène"
-icon = ExtResource("4")
