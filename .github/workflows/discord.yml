@@ -26,5 +26,5 @@ jobs:
 
           curl -H "Content-Type: application/json" \
                -X POST \
-               -d "{\"embeds\":[{\"title\":\"🧪 Sporyx - Commit sur ${BRANCH_NAME}\",\"url\":\"${COMMIT_URL}\",\"color\":65387,\"author\":{\"name\":\"${AUTHOR}\",\"url\":\"${REPO_URL}\",\"icon_url\":\"${AVATAR_URL}\"},\"fields\":[{\"name\":\"Message\",\"value\":\"${COMMIT_MESSAGE}\"}],\"footer\":{\"text\":\"Project X | ${GITHUB_REPOSITORY}\"},\"timestamp\":\"${TIMESTAMP}\"}]}" \
+               -d "{\"embeds\":[{\"title\":\"🧪 Sporyx - Commit sur ${BRANCH_NAME}\",\"url\":\"${COMMIT_URL}\",\"color\":65387,\"author\":{\"name\":\"${AUTHOR}\",\"url\":\"${REPO_URL}\",\"icon_url\":\"${AVATAR_URL}\"},\"fields\":[{\"name\":\"Message\",\"value\":\"${COMMIT_MESSAGE}\"}],\"footer\":{\"text\":\"Sporyx | ${GITHUB_REPOSITORY}\"},\"timestamp\":\"${TIMESTAMP}\"}]}" \
                $DISCORD_WEBHOOK
