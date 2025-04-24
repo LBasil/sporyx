@@ -1,0 +1,30 @@
+name: Discord Notify - Sporyx
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Notify Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+          COMMIT_URL="https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
+          BRANCH_NAME=${GITHUB_REF##*/}
+          AUTHOR=${GITHUB_ACTOR}
+          AVATAR_URL="https://github.com/${GITHUB_ACTOR}.png"
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "{\"embeds\":[{\"title\":\"🧪 Sporyx - Commit sur ${BRANCH_NAME}\",\"url\":\"${COMMIT_URL}\",\"color\":65387,\"author\":{\"name\":\"${AUTHOR}\",\"url\":\"${REPO_URL}\",\"icon_url\":\"${AVATAR_URL}\"},\"fields\":[{\"name\":\"Message\",\"value\":\"${COMMIT_MESSAGE}\"}],\"footer\":{\"text\":\"Project X | ${GITHUB_REPOSITORY}\"},\"timestamp\":\"${TIMESTAMP}\"}]}" \
+               $DISCORD_WEBHOOK
