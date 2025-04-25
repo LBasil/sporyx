@@ -1,4 +1,4 @@
-extends Node3D
+extends Node2D
 
 var inventory_ui = null
 var explore_ui = null
