@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://b1xt75m4rg672"]
 
-[ext_resource type="Script" path="res://arena.gd" id="1"]
+[ext_resource type="Script" uid="uid://dpgn31k4vu82i" path="res://arena.gd" id="1"]
 
 [node name="Arena" type="Control"]
 layout_mode = 3
@@ -17,20 +17,39 @@ offset_right = 950.0
 offset_bottom = 550.0
 color = Color(0.2, 0.1, 0.3, 0.8)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="Panel" type="Panel" parent="."]
 layout_mode = 0
 offset_left = 70.0
 offset_top = 70.0
 offset_right = 930.0
 offset_bottom = 530.0
 
-[node name="ChallengeButton" type="Button" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 840.0
+offset_bottom = 440.0
+theme_override_constants/separation = 20
+
+[node name="PlayerStats" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
-offset_right = 800.0
-offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
+text = "Joueur : HP 10, Attaque 3"
+horizontal_alignment = 1
+
+[node name="OpponentStats" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
+text = "Adversaire : HP 10, Attaque 3"
+horizontal_alignment = 1
+
+[node name="ChallengeButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
 text = "Défier un joueur"
 
-[node name="ResponseLabel" type="Label" parent="VBoxContainer"]
+[node name="ResponseLabel" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
 text = "En attente de réponse..."

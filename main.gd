@@ -7,21 +7,47 @@ var arena_ui = null
 
 func _ready():
 	print("Initializing UI...")
+	
+	# Charger Inventory.tscn
 	if ResourceLoader.exists("res://Inventory.tscn"):
-		inventory_ui = load("res://Inventory.tscn").instantiate()
-		ui_container.add_child(inventory_ui)
-		inventory_ui.visible = false
-		print("Inventory UI loaded")
+		var inventory_scene = load("res://Inventory.tscn")
+		if inventory_scene:
+			inventory_ui = inventory_scene.instantiate()
+			ui_container.add_child(inventory_ui)
+			inventory_ui.visible = false
+			print("Inventory UI loaded")
+		else:
+			print("Error: Failed to load res://Inventory.tscn")
+	else:
+		print("Error: res://Inventory.tscn does not exist")
+	
+	# Charger Explore.tscn
 	if ResourceLoader.exists("res://Explore.tscn"):
-		explore_ui = load("res://Explore.tscn").instantiate()
-		ui_container.add_child(explore_ui)
-		explore_ui.visible = false
-		print("Explore UI loaded")
-	if ResourceLoader.exists("res://Arena.tscn"):
-		arena_ui = load("res://Arena.tscn").instantiate()
-		ui_container.add_child(arena_ui)
-		arena_ui.visible = false
-		print("Arena UI loaded")
+		var explore_scene = load("res://Explore.tscn")
+		if explore_scene:
+			explore_ui = explore_scene.instantiate()
+			ui_container.add_child(explore_ui)
+			explore_ui.visible = false
+			print("Explore UI loaded")
+		else:
+			print("Error: Failed to load res://Explore.tscn")
+	else:
+		print("Error: res://Explore.tscn does not exist")
+	
+	# Charger Arena.tscn (ajuste le chemin si nécessaire)
+	var arena_path = "res://Arena.tscn"  # Change ici si Arena.tscn est ailleurs (ex. : "res://scenes/Arena.tscn")
+	if ResourceLoader.exists(arena_path):
+		var arena_scene = load(arena_path)
+		if arena_scene:
+			arena_ui = arena_scene.instantiate()
+			ui_container.add_child(arena_ui)
+			arena_ui.visible = false
+			arena_ui.fight_request.connect(_on_fight_request)
+			print("Arena UI loaded")
+		else:
+			print("Error: Failed to load " + arena_path)
+	else:
+		print("Error: " + arena_path + " does not exist")
 	
 	$UI/InventoryButton.pressed.connect(_on_inventory_button_pressed)
 	$UI/ExploreButton.pressed.connect(_on_explore_button_pressed)
@@ -52,8 +78,8 @@ func send_ping_request():
 	add_child(http_request)
 	http_request.request_completed.connect(_on_request_completed)
 	
-	# Envoyer une requête GET au serveur (localhost:8080)
-	var error = http_request.request("http://localhost:8080/ping")
+	# Envoyer une requête GET au serveur (127.0.0.1:8080)
+	var error = http_request.request("http://127.0.0.1:8080/ping")
 	if error != OK:
 		print("Error sending request: ", error)
 	else:
@@ -72,3 +98,39 @@ func _on_request_completed(result, response_code, headers, body):
 			arena_ui.update_response(response)
 	else:
 		print("Request failed with code: ", response_code)
+
+func _on_fight_request(player_stats):
+	var http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(_on_fight_request_completed)
+	
+	# Préparer les stats de l'adversaire (on les génère côté serveur, mais on envoie des stats de base ici)
+	var enemy_stats = {"hp": 10, "attack": 3}  # Stats de base, seront modifiées par le serveur
+	var fight_data = {
+		"action": "fight",
+		"player": player_stats,
+		"enemy": enemy_stats
+	}
+	var json = JSON.stringify(fight_data)
+	var headers = ["Content-Type: application/json"]
+	
+	# Envoyer une requête POST au serveur
+	var error = http_request.request("http://127.0.0.1:8080/fight", headers, HTTPClient.METHOD_POST, json)
+	if error != OK:
+		print("Error sending fight request: ", error)
+	else:
+		print("Fight request sent successfully")
+
+func _on_fight_request_completed(result, response_code, headers, body):
+	print("Fight request completed with result: ", result)
+	print("Response code: ", response_code)
+	print("Headers: ", headers)
+	print("Body (raw): ", body)
+	if response_code == 200:
+		var response = body.get_string_from_utf8()
+		print("Server response (parsed): ", response)
+		# Mettre à jour l'interface Arène avec la réponse
+		if arena_ui and arena_ui.visible:
+			arena_ui.update_response(response)
+	else:
+		print("Fight request failed with code: ", response_code)
