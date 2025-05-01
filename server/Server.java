@@ -89,8 +89,12 @@ public class Server {
             if (opponentHp < 1) opponentHp = 1; // Éviter HP négatif
             if (opponentAttack < 1) opponentAttack = 1; // Éviter attaque négative
 
-            System.out.println("Player: HP=" + playerHp + ", Attack=" + playerAttack);
-            System.out.println("Opponent: HP=" + opponentHp + ", Attack=" + opponentAttack);
+            // Construire un historique du combat
+            StringBuilder combatLog = new StringBuilder();
+            combatLog.append("Début du combat !\n");
+            combatLog.append("Joueur: HP=").append(playerHp).append(", Attaque=").append(playerAttack).append("\n");
+            combatLog.append("Adversaire: HP=").append(opponentHp).append(", Attaque=").append(opponentAttack).append("\n");
+            combatLog.append("---\n");
 
             // Simuler le combat avec aléatoire
             while (playerHp > 0 && opponentHp > 0) {
@@ -99,9 +103,9 @@ public class Server {
                     int damage = playerAttack + rand.nextInt(3) - 1; // Dégâts entre attack-1 et attack+1
                     if (damage < 1) damage = 1;
                     opponentHp -= damage;
-                    System.out.println("Player hits Opponent for " + damage + " damage. Opponent HP: " + opponentHp);
+                    combatLog.append("Joueur inflige ").append(damage).append(" dégâts ! Adversaire a ").append(opponentHp).append(" HP.\n");
                 } else {
-                    System.out.println("Player misses!");
+                    combatLog.append("Joueur rate son attaque !\n");
                 }
 
                 if (opponentHp <= 0) break;
@@ -111,17 +115,20 @@ public class Server {
                     int damage = opponentAttack + rand.nextInt(3) - 1; // Dégâts entre attack-1 et attack+1
                     if (damage < 1) damage = 1;
                     playerHp -= damage;
-                    System.out.println("Opponent hits Player for " + damage + " damage. Player HP: " + playerHp);
+                    combatLog.append("Adversaire inflige ").append(damage).append(" dégâts ! Joueur a ").append(playerHp).append(" HP.\n");
                 } else {
-                    System.out.println("Opponent misses!");
+                    combatLog.append("Adversaire rate son attaque !\n");
                 }
             }
 
+            combatLog.append("---\n");
             if (playerHp > 0) {
-                return "Vous avez gagné !";
+                combatLog.append("Vous avez gagné !");
             } else {
-                return "Vous avez perdu !";
+                combatLog.append("Vous avez perdu !");
             }
+
+            return combatLog.toString();
         } catch (Exception e) {
             return "Erreur lors du combat: " + e.getMessage();
         }

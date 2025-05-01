@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://b1xt75m4rg672"]
+[gd_scene load_steps=2 format=3 uid="uid://3jwff6gcjg77"]
 
 [ext_resource type="Script" uid="uid://dpgn31k4vu82i" path="res://arena.gd" id="1"]
 
@@ -49,8 +49,11 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
 text = "Défier un joueur"
 
-[node name="ResponseLabel" type="Label" parent="Panel/VBoxContainer"]
+[node name="CombatLog" type="TextEdit" parent="Panel/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
 text = "En attente de réponse..."
-horizontal_alignment = 1
+editable = false
+wrap_mode = 1
+scroll_fit_content_height = true
