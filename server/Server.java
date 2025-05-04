@@ -4,9 +4,11 @@ import java.util.*;
 
 public class Server {
     private static Map<String, Map<String, Integer>> players = new HashMap<>();
+    private static Map<String, String> worlds = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         loadPlayers();
+        initializeWorlds();
         int port = 8080;
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server started on port " + port);
@@ -42,8 +44,12 @@ public class Server {
                             responseBody = "pong";
                         } else if (requestLine.startsWith("POST /fight")) {
                             responseBody = simulateFight();
+                        } else if (requestLine.startsWith("POST /explore")) {
+                            responseBody = performExploration(body.toString());
                         }
                     }
+
+                    System.out.println("Full response to send:\n" + responseBody);
 
                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                     out.println("HTTP/1.1 200 OK");
@@ -90,6 +96,45 @@ public class Server {
         System.out.println("Players loaded: " + players);
     }
 
+    private static void initializeWorlds() {
+        worlds.put("Forêt Mycélique", "Une forêt luxuriante remplie de champignons géants et de spores flottantes.");
+        worlds.put("Caverne Sporique", "Une grotte sombre où brillent des cristaux sporiques luminescents.");
+        System.out.println("Worlds initialized: " + worlds);
+    }
+
+    private static String performExploration(String requestBody) {
+        String worldName = parseWorldName(requestBody);
+        if (!worlds.containsKey(worldName)) {
+            return "Monde inconnu.";
+        }
+
+        try {
+            Thread.sleep(10000); // Attendre 10 secondes
+            StringBuilder response = new StringBuilder();
+            response.append("Exploration de ").append(worldName).append(" terminée !\n");
+            response.append(worlds.get(worldName)).append("\n");
+            Random rand = new Random();
+            if (rand.nextBoolean()) {
+                response.append("Vous avez trouvé 5 spores !");
+            } else {
+                response.append("Vous avez rencontré un ennemi mais vous avez fui.");
+            }
+            return response.toString();
+        } catch (InterruptedException e) {
+            return "Exploration interrompue.";
+        }
+    }
+
+    private static String parseWorldName(String body) {
+        String worldName = body;
+        if (body.contains("world")) {
+            int start = body.indexOf(":") + 2;
+            int end = body.lastIndexOf("\"");
+            worldName = body.substring(start, end);
+        }
+        return worldName;
+    }
+
     private static String simulateFight() {
         Random rand = new Random();
         List<String> playerNames = new ArrayList<>(players.keySet());
@@ -127,23 +172,20 @@ public class Server {
         int maxConsecutiveDodges = 5;
 
         while (p1Pv > 0 && p2Pv > 0) {
-            // Calcul du taux d'esquive pour player1
-            int p1DodgeChance = 10 + p1Fuite - p1Agressivite / 2; // Base 10% + fuite - agressivité/2
+            int p1DodgeChance = 10 + p1Fuite - p1Agressivite / 2;
             if (p1DodgeChance < 0) p1DodgeChance = 0;
             if (p1DodgeChance > 90) p1DodgeChance = 90;
 
-            // Calcul du taux d'esquive pour player2
             int p2DodgeChance = 10 + p2Fuite - p2Agressivite / 2;
             if (p2DodgeChance < 0) p2DodgeChance = 0;
             if (p2DodgeChance > 90) p2DodgeChance = 90;
 
-            // Tour du joueur 1
             if (rand.nextInt(100) < p2DodgeChance && p2ConsecutiveDodges < maxConsecutiveDodges) {
                 p2ConsecutiveDodges++;
-                p1ConsecutiveDodges = 0; // Réinitialiser le compteur adverse
+                p1ConsecutiveDodges = 0;
                 log.append(player2Name).append(" esquive l'attaque de ").append(player1Name).append(" !\n");
             } else {
-                p2ConsecutiveDodges = 0; // Réinitialiser si l'attaque touche
+                p2ConsecutiveDodges = 0;
                 int damage = calculateDamage(p1Attaque, p2Defense, p1Critique, rand);
                 p2Pv -= damage;
                 log.append(player1Name).append(" inflige ").append(damage).append(" dégâts à ").append(player2Name)
@@ -152,7 +194,6 @@ public class Server {
 
             if (p2Pv <= 0) break;
 
-            // Tour du joueur 2
             if (rand.nextInt(100) < p1DodgeChance && p1ConsecutiveDodges < maxConsecutiveDodges) {
                 p1ConsecutiveDodges++;
                 p2ConsecutiveDodges = 0;
