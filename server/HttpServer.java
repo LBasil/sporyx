@@ -76,6 +76,8 @@ public class HttpServer {
         }
         if (requestLine.startsWith("GET /ping")) {
             return "pong";
+        } else if (requestLine.startsWith("GET /worlds")) {
+            return explorationManager.getWorldsList();
         } else if (requestLine.startsWith("POST /fight")) {
             return combatManager.simulateFight();
         } else if (requestLine.startsWith("POST /explore")) {
