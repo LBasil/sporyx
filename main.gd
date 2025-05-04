@@ -8,7 +8,6 @@ var arena_ui = null
 func _ready():
 	print("Initializing UI...")
 	
-	# Charger Inventory.tscn
 	if ResourceLoader.exists("res://Inventory.tscn"):
 		var inventory_scene = load("res://Inventory.tscn")
 		if inventory_scene:
@@ -21,7 +20,6 @@ func _ready():
 	else:
 		print("Error: res://Inventory.tscn does not exist")
 	
-	# Charger Explore.tscn
 	if ResourceLoader.exists("res://Explore.tscn"):
 		var explore_scene = load("res://Explore.tscn")
 		if explore_scene:
@@ -34,10 +32,8 @@ func _ready():
 	else:
 		print("Error: res://Explore.tscn does not exist")
 	
-	# Charger Arena.tscn (ajuste le chemin si nécessaire)
-	var arena_path = "res://Arena.tscn"  # Change ici si Arena.tscn est ailleurs (ex. : "res://scenes/Arena.tscn")
-	if ResourceLoader.exists(arena_path):
-		var arena_scene = load(arena_path)
+	if ResourceLoader.exists("res://Arena.tscn"):
+		var arena_scene = load("res://Arena.tscn")
 		if arena_scene:
 			arena_ui = arena_scene.instantiate()
 			ui_container.add_child(arena_ui)
@@ -45,9 +41,9 @@ func _ready():
 			arena_ui.fight_request.connect(_on_fight_request)
 			print("Arena UI loaded")
 		else:
-			print("Error: Failed to load " + arena_path)
+			print("Error: Failed to load res://Arena.tscn")
 	else:
-		print("Error: " + arena_path + " does not exist")
+		print("Error: res://Arena.tscn does not exist")
 	
 	$UI/InventoryButton.pressed.connect(_on_inventory_button_pressed)
 	$UI/ExploreButton.pressed.connect(_on_explore_button_pressed)
@@ -70,7 +66,6 @@ func _on_arena_button_pressed():
 		arena_ui.visible = !arena_ui.visible
 		if inventory_ui: inventory_ui.visible = false
 		if explore_ui: explore_ui.visible = false
-		# Envoyer une requête "ping" au serveur
 		send_ping_request()
 
 func send_ping_request():
@@ -78,7 +73,6 @@ func send_ping_request():
 	add_child(http_request)
 	http_request.request_completed.connect(_on_request_completed)
 	
-	# Envoyer une requête GET au serveur (127.0.0.1:8080)
 	var error = http_request.request("http://127.0.0.1:8080/ping")
 	if error != OK:
 		print("Error sending request: ", error)
@@ -93,29 +87,15 @@ func _on_request_completed(result, response_code, headers, body):
 	if response_code == 200:
 		var response = body.get_string_from_utf8()
 		print("Server response (parsed): ", response)
-		# Mettre à jour l'interface Arène avec la réponse
 		if arena_ui and arena_ui.visible:
-			arena_ui.update_response(response)
-	else:
-		print("Request failed with code: ", response_code)
+			arena_ui.update_combat_log(response)
 
 func _on_fight_request(player_stats):
 	var http_request = HTTPRequest.new()
 	add_child(http_request)
 	http_request.request_completed.connect(_on_fight_request_completed)
 	
-	# Préparer les stats de l'adversaire (on les génère côté serveur, mais on envoie des stats de base ici)
-	var enemy_stats = {"hp": 10, "attack": 3}  # Stats de base, seront modifiées par le serveur
-	var fight_data = {
-		"action": "fight",
-		"player": player_stats,
-		"enemy": enemy_stats
-	}
-	var json = JSON.stringify(fight_data)
-	var headers = ["Content-Type: application/json"]
-	
-	# Envoyer une requête POST au serveur
-	var error = http_request.request("http://127.0.0.1:8080/fight", headers, HTTPClient.METHOD_POST, json)
+	var error = http_request.request("http://127.0.0.1:8080/fight", ["Content-Type: application/json"], HTTPClient.METHOD_POST, "{}")
 	if error != OK:
 		print("Error sending fight request: ", error)
 	else:
@@ -129,8 +109,5 @@ func _on_fight_request_completed(result, response_code, headers, body):
 	if response_code == 200:
 		var response = body.get_string_from_utf8()
 		print("Server response (parsed): ", response)
-		# Mettre à jour l'interface Arène avec la réponse
 		if arena_ui and arena_ui.visible:
-			arena_ui.update_response(response)
-	else:
-		print("Fight request failed with code: ", response_code)
+			arena_ui.update_combat_log(response)

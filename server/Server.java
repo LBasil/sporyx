@@ -1,9 +1,12 @@
 import java.io.*;
 import java.net.*;
-import java.util.Random;
+import java.util.*;
 
 public class Server {
-    public static void main(String[] args) {
+    private static Map<String, Map<String, Integer>> players = new HashMap<>();
+
+    public static void main(String[] args) throws IOException {
+        loadPlayers();
         int port = 8080;
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server started on port " + port);
@@ -12,12 +15,10 @@ public class Server {
                 try (Socket clientSocket = serverSocket.accept()) {
                     System.out.println("Client connected: " + clientSocket.getInetAddress());
 
-                    // Lire la requête HTTP
                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                     String requestLine = in.readLine();
                     System.out.println("Request: " + requestLine);
 
-                    // Lire les en-têtes
                     String line;
                     int contentLength = 0;
                     while ((line = in.readLine()) != null && !line.isEmpty()) {
@@ -27,7 +28,6 @@ public class Server {
                         }
                     }
 
-                    // Lire le corps de la requête (si POST)
                     StringBuilder body = new StringBuilder();
                     if (contentLength > 0) {
                         char[] buffer = new char[contentLength];
@@ -36,21 +36,15 @@ public class Server {
                         System.out.println("Body: " + body.toString());
                     }
 
-                    // Préparer la réponse
                     String responseBody = "Unknown message";
                     if (requestLine != null) {
-                        // Gérer GET /ping
                         if (requestLine.startsWith("GET /ping")) {
                             responseBody = "pong";
-                        }
-                        // Gérer POST /fight
-                        else if (requestLine.startsWith("POST /fight")) {
-                            // Simuler un combat
-                            responseBody = simulateFight(body.toString());
+                        } else if (requestLine.startsWith("POST /fight")) {
+                            responseBody = simulateFight();
                         }
                     }
 
-                    // Envoyer une réponse HTTP
                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                     out.println("HTTP/1.1 200 OK");
                     out.println("Content-Type: text/plain");
@@ -61,10 +55,8 @@ public class Server {
                     out.flush();
                     System.out.println("Response sent: " + responseBody);
 
-                    // Fermer explicitement le socket
                     clientSocket.close();
                     System.out.println("Connection closed");
-
                 } catch (IOException e) {
                     System.out.println("Error handling client: " + e.getMessage());
                 }
@@ -75,96 +67,120 @@ public class Server {
         }
     }
 
-    private static String simulateFight(String requestBody) {
-        try {
-            // Extraire les stats du joueur
-            String playerJson = extractJsonObject(requestBody, "\"player\":");
-            int playerHp = extractValue(playerJson, "\"hp\":", ",");
-            int playerAttack = extractValue(playerJson, "\"attack\":", "}");
+    private static void loadPlayers() throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader("players.txt"))) {
+            String line;
+            String currentPlayer = null;
+            Map<String, Integer> stats = null;
 
-            // Générer un adversaire (un autre joueur) avec des stats similaires mais légèrement aléatoires
-            Random rand = new Random();
-            int opponentHp = playerHp + rand.nextInt(5) - 2; // HP entre playerHp-2 et playerHp+2
-            int opponentAttack = playerAttack + rand.nextInt(3) - 1; // Attaque entre playerAttack-1 et playerAttack+1
-            if (opponentHp < 1) opponentHp = 1; // Éviter HP négatif
-            if (opponentAttack < 1) opponentAttack = 1; // Éviter attaque négative
-
-            // Construire un historique du combat
-            StringBuilder combatLog = new StringBuilder();
-            combatLog.append("Début du combat !\n");
-            combatLog.append("Joueur: HP=").append(playerHp).append(", Attaque=").append(playerAttack).append("\n");
-            combatLog.append("Adversaire: HP=").append(opponentHp).append(", Attaque=").append(opponentAttack).append("\n");
-            combatLog.append("---\n");
-
-            // Simuler le combat avec aléatoire
-            while (playerHp > 0 && opponentHp > 0) {
-                // Attaque du joueur
-                if (rand.nextFloat() > 0.3) { // 70% de chance de toucher
-                    int damage = playerAttack + rand.nextInt(3) - 1; // Dégâts entre attack-1 et attack+1
-                    if (damage < 1) damage = 1;
-                    opponentHp -= damage;
-                    combatLog.append("Joueur inflige ").append(damage).append(" dégâts ! Adversaire a ").append(opponentHp).append(" HP.\n");
-                } else {
-                    combatLog.append("Joueur rate son attaque !\n");
-                }
-
-                if (opponentHp <= 0) break;
-
-                // Attaque de l'adversaire
-                if (rand.nextFloat() > 0.3) { // 70% de chance de toucher
-                    int damage = opponentAttack + rand.nextInt(3) - 1; // Dégâts entre attack-1 et attack+1
-                    if (damage < 1) damage = 1;
-                    playerHp -= damage;
-                    combatLog.append("Adversaire inflige ").append(damage).append(" dégâts ! Joueur a ").append(playerHp).append(" HP.\n");
-                } else {
-                    combatLog.append("Adversaire rate son attaque !\n");
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.endsWith(":")) {
+                    currentPlayer = line.substring(0, line.length() - 1);
+                    stats = new HashMap<>();
+                    players.put(currentPlayer, stats);
+                } else if (currentPlayer != null && line.contains(":")) {
+                    String[] parts = line.split(":");
+                    if (parts.length == 2) {
+                        stats.put(parts[0].trim(), Integer.parseInt(parts[1].trim()));
+                    }
                 }
             }
+        }
+        System.out.println("Players loaded: " + players);
+    }
 
-            combatLog.append("---\n");
-            if (playerHp > 0) {
-                combatLog.append("Vous avez gagné !");
+    private static String simulateFight() {
+        Random rand = new Random();
+        List<String> playerNames = new ArrayList<>(players.keySet());
+        if (playerNames.size() < 2) return "Not enough players in database.";
+
+        String player1Name = playerNames.get(rand.nextInt(playerNames.size()));
+        String player2Name;
+        do {
+            player2Name = playerNames.get(rand.nextInt(playerNames.size()));
+        } while (player2Name.equals(player1Name));
+
+        Map<String, Integer> player1Stats = players.get(player1Name);
+        Map<String, Integer> player2Stats = players.get(player2Name);
+
+        int p1Pv = player1Stats.get("pv");
+        int p1Attaque = player1Stats.get("attaque");
+        int p1Defense = player1Stats.get("defense");
+        int p1Fuite = player1Stats.get("fuite");
+        int p1Critique = player1Stats.get("critique");
+        int p1Agressivite = player1Stats.get("agressivite");
+
+        int p2Pv = player2Stats.get("pv");
+        int p2Attaque = player2Stats.get("attaque");
+        int p2Defense = player2Stats.get("defense");
+        int p2Fuite = player2Stats.get("fuite");
+        int p2Critique = player2Stats.get("critique");
+        int p2Agressivite = player2Stats.get("agressivite");
+
+        StringBuilder log = new StringBuilder("Début du combat !\n");
+        log.append(player1Name).append(": HP=").append(p1Pv).append(", Attaque=").append(p1Attaque).append("\n");
+        log.append(player2Name).append(": HP=").append(p2Pv).append(", Attaque=").append(p2Attaque).append("\n");
+
+        int p1ConsecutiveDodges = 0;
+        int p2ConsecutiveDodges = 0;
+        int maxConsecutiveDodges = 5;
+
+        while (p1Pv > 0 && p2Pv > 0) {
+            // Calcul du taux d'esquive pour player1
+            int p1DodgeChance = 10 + p1Fuite - p1Agressivite / 2; // Base 10% + fuite - agressivité/2
+            if (p1DodgeChance < 0) p1DodgeChance = 0;
+            if (p1DodgeChance > 90) p1DodgeChance = 90;
+
+            // Calcul du taux d'esquive pour player2
+            int p2DodgeChance = 10 + p2Fuite - p2Agressivite / 2;
+            if (p2DodgeChance < 0) p2DodgeChance = 0;
+            if (p2DodgeChance > 90) p2DodgeChance = 90;
+
+            // Tour du joueur 1
+            if (rand.nextInt(100) < p2DodgeChance && p2ConsecutiveDodges < maxConsecutiveDodges) {
+                p2ConsecutiveDodges++;
+                p1ConsecutiveDodges = 0; // Réinitialiser le compteur adverse
+                log.append(player2Name).append(" esquive l'attaque de ").append(player1Name).append(" !\n");
             } else {
-                combatLog.append("Vous avez perdu !");
+                p2ConsecutiveDodges = 0; // Réinitialiser si l'attaque touche
+                int damage = calculateDamage(p1Attaque, p2Defense, p1Critique, rand);
+                p2Pv -= damage;
+                log.append(player1Name).append(" inflige ").append(damage).append(" dégâts à ").append(player2Name)
+                   .append(" (HP: ").append(p2Pv).append(").\n");
             }
 
-            return combatLog.toString();
-        } catch (Exception e) {
-            return "Erreur lors du combat: " + e.getMessage();
-        }
-    }
+            if (p2Pv <= 0) break;
 
-    private static String extractJsonObject(String json, String key) {
-        int startIndex = json.indexOf(key) + key.length();
-        int braceCount = 0;
-        int i = startIndex;
-        boolean insideObject = false;
-
-        while (i < json.length()) {
-            char c = json.charAt(i);
-            if (c == '{') {
-                braceCount++;
-                insideObject = true;
-            } else if (c == '}') {
-                braceCount--;
-                if (braceCount == 0 && insideObject) {
-                    return json.substring(startIndex, i + 1);
-                }
+            // Tour du joueur 2
+            if (rand.nextInt(100) < p1DodgeChance && p1ConsecutiveDodges < maxConsecutiveDodges) {
+                p1ConsecutiveDodges++;
+                p2ConsecutiveDodges = 0;
+                log.append(player1Name).append(" esquive l'attaque de ").append(player2Name).append(" !\n");
+            } else {
+                p1ConsecutiveDodges = 0;
+                int damage = calculateDamage(p2Attaque, p1Defense, p2Critique, rand);
+                p1Pv -= damage;
+                log.append(player2Name).append(" inflige ").append(damage).append(" dégâts à ").append(player1Name)
+                   .append(" (HP: ").append(p1Pv).append(").\n");
             }
-            i++;
         }
-        throw new IllegalArgumentException("Could not find closing brace for " + key);
+
+        if (p1Pv > 0) {
+            log.append(player1Name).append(" a gagné !");
+        } else {
+            log.append(player2Name).append(" a gagné !");
+        }
+        return log.toString();
     }
 
-    private static int extractValue(String json, String key, String endDelimiter) {
-        int startIndex = json.indexOf(key) + key.length();
-        int endIndex = json.indexOf(endDelimiter, startIndex);
-        if (endIndex == -1) {
-            endIndex = json.length();
+    private static int calculateDamage(int attaque, int defense, int critique, Random rand) {
+        int baseDamage = attaque - defense / 2;
+        if (baseDamage < 1) baseDamage = 1;
+        if (rand.nextInt(100) < critique) {
+            baseDamage *= 2;
+            System.out.println("Coup critique !");
         }
-        String value = json.substring(startIndex, endIndex).trim();
-        // Supprimer les caractères non numériques (ex. : "8}" -> "8")
-        value = value.replaceAll("[^0-9]", "");
-        return Integer.parseInt(value);
+        return baseDamage;
     }
 }

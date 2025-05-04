@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://3jwff6gcjg77"]
+[gd_scene load_steps=2 format=3 uid="uid://e0bn3ydsv43i"]
 
 [ext_resource type="Script" uid="uid://dpgn31k4vu82i" path="res://arena.gd" id="1"]
 
@@ -30,30 +30,30 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = 840.0
 offset_bottom = 440.0
-theme_override_constants/separation = 20
+theme_override_constants/separation = 10
 
 [node name="PlayerStats" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "Joueur : HP 10, Attaque 3"
 horizontal_alignment = 1
 
 [node name="OpponentStats" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "Adversaire : HP 10, Attaque 3"
 horizontal_alignment = 1
 
 [node name="ChallengeButton" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "Défier un joueur"
 
-[node name="CombatLog" type="TextEdit" parent="Panel/VBoxContainer"]
+[node name="CombatLog" type="RichTextLabel" parent="Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_colors/font_color = Color(0.9, 0.6, 0.8, 1)
-text = "En attente de réponse..."
-editable = false
-wrap_mode = 1
-scroll_fit_content_height = true
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+bbcode_enabled = true
+text = "[center]En attente de combat...[/center]"
+autowrap_mode = 2

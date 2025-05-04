@@ -1,0 +1,15 @@
+player1:
+  pv: 100
+  attaque: 10
+  defense: 5
+  fuite: 20
+  critique: 10
+  agressivite: 50
+
+player2:
+  pv: 90
+  attaque: 12
+  defense: 4
+  fuite: 15
+  critique: 15
+  agressivite: 70
